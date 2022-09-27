@@ -1,6 +1,5 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
-import 'package:pizza_repository/pizza_repository.dart';
 import 'package:simple_state_management_example/bottom_nav_bar/view/bottom_nav_bar_view.dart';
 import 'package:simple_state_management_example/menu/view/menu_view.dart';
 import 'package:simple_state_management_example/products_cart/view/products_cart_view.dart';

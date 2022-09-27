@@ -17,9 +17,8 @@ class BottomNavBarView extends StatelessWidget implements AutoRouteWrapper {
         ProductsCartRoute(),
       ],
       bottomNavigationBuilder: (context, tabsRouter) {
-        final cartProductsCount = context.select<BottomNavBarBloc, int>(
-          (bloc) => bloc.state.shoppingCart.length,
-        );
+        final cartProductsCount = context.select<BottomNavBarBloc, int?>(
+            (bloc) => bloc.state.productsInCart,);
         return BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
           selectedItemColor: Colors.deepOrange,
@@ -34,7 +33,7 @@ class BottomNavBarView extends StatelessWidget implements AutoRouteWrapper {
             BottomNavigationBarItem(
               label: 'Cart',
               icon: Badge(
-                showBadge: cartProductsCount != 0,
+                showBadge: cartProductsCount != 0 && cartProductsCount != null,
                 badgeContent: Text(cartProductsCount.toString()),
                 child: const Icon(Icons.shopping_cart_rounded),
               ),
@@ -48,7 +47,7 @@ class BottomNavBarView extends StatelessWidget implements AutoRouteWrapper {
   @override
   Widget wrappedRoute(BuildContext context) {
     return BlocProvider<BottomNavBarBloc>(
-      create: (ctx) => BottomNavBarBloc(PizzaRepository()),
+      create: (ctx) => BottomNavBarBloc(context.read<PizzaRepository>()),
       child: this,
     );
   }

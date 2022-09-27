@@ -9,40 +9,30 @@ part 'bottom_nav_bar_state.dart';
 
 class BottomNavBarBloc extends Bloc<BottomNavBarEvent, BottomNavBarState> {
   final PizzaRepository _pizzaRepository;
-  late final StreamSubscription<CartStorageStatus> _homePageStatusSubscription;
+  late final StreamSubscription<CartStorageStatus> _cartStatusSubscription;
   BottomNavBarBloc(this._pizzaRepository) : super(BottomNavBarState.initial()) {
-    _homePageStatusSubscription =
+    _cartStatusSubscription =
         _pizzaRepository.cartStorageStatus.listen((status) {
       add(CartStatusChangedEvent(status));
     });
-    on<LoadDataEvent>(_loadData);
     on<CartStatusChangedEvent>(_onCartStatusChanged);
+    on<LoadDataEvent>(_loadData);
     on<AddProductToCartEvent>(_addProductToCart);
-    on<RemoveProductFromCartEvent>(_removeProductFromCart);
-    on<ClearProductCartEvent>(_clearProductCart);
     add(LoadDataEvent());
   }
 
-  Future<void> _onCartStatusChanged(
+  void _onCartStatusChanged(
     CartStatusChangedEvent event,
     Emitter<BottomNavBarState> emit,
-  ) async {
+  ) {
     switch (event.status) {
       case CartStorageStatus.empty:
-        return emit(state.copyWith(
-          shoppingCart: [],
-          status: event.status,
-        ),);
       case CartStorageStatus.loading:
-        return emit(state.copyWith(status: event.status));
-      case CartStorageStatus.hasData:
-        final cartProducts = (await _pizzaRepository.productsCart)
-            .map<Product>((e) => Product(e.name))
-            .toList();
-        return emit(state.copyWith(
-          shoppingCart: cartProducts,
-          status: event.status,
-        ),);
+      case CartStorageStatus.updated:
+      return emit(state.copyWith(
+        productsInCart: _pizzaRepository.productsCart.length,),);
+      case CartStorageStatus.error:
+        return;
     }
   }
 
@@ -50,10 +40,15 @@ class BottomNavBarBloc extends Bloc<BottomNavBarEvent, BottomNavBarState> {
     LoadDataEvent event,
     Emitter<BottomNavBarState> emit,
   ) async {
-    final allProducts = (await _pizzaRepository.allProducts)
+    final allProducts = (_pizzaRepository.allProducts)
         .map<Product>((e) => Product(e.name))
         .toList();
-    return emit(state.copyWith(allProducts: allProducts));
+    return emit(
+      state.copyWith(
+        allProducts: allProducts,
+        productsInCart: _pizzaRepository.productsCart.length,
+      ),
+    );
   }
 
   Future<void> _addProductToCart(
@@ -61,33 +56,10 @@ class BottomNavBarBloc extends Bloc<BottomNavBarEvent, BottomNavBarState> {
     Emitter<BottomNavBarState> emit,
   ) async {
     await _pizzaRepository.addProductToCart(event.product.name);
-    final shoppingCart = (await _pizzaRepository.productsCart)
-        .map<Product>((e) => Product(e.name))
-        .toList();
-    return emit(state.copyWith(shoppingCart: shoppingCart));
-  }
-
-  Future<void> _removeProductFromCart(
-    RemoveProductFromCartEvent event,
-    Emitter<BottomNavBarState> emit,
-  ) async {
-    await _pizzaRepository.removeProductFromCart(event.product.name);
-    final shoppingCart = (await _pizzaRepository.productsCart)
-        .map<Product>((e) => Product(e.name))
-        .toList();
-    return emit(state.copyWith(shoppingCart: shoppingCart));
-  }
-
-  Future<void> _clearProductCart(
-    ClearProductCartEvent event,
-    Emitter<BottomNavBarState> emit,
-  ) async {
-    await _pizzaRepository.removeAllProducts();
-    return emit(state.copyWith(shoppingCart: []));
   }
 
   void dispose() {
-    _homePageStatusSubscription.cancel();
+    _cartStatusSubscription.cancel();
     _pizzaRepository.dispose();
   }
 }
