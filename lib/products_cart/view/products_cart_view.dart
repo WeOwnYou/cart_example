@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:pizza_repository/pizza_repository.dart';
 import 'package:simple_state_management_example/bottom_nav_bar/bloc/bottom_nav_bar_bloc.dart';
 import 'package:simple_state_management_example/entity/models/product.dart';
 
 Map<Product, int> compact(List<Product> products) {
   final result = <Product, int>{};
   for (var i = 0; i < products.length; i++) {
-    result.update(products[i], (value) => value,
-        ifAbsent: () =>
-            products.where((element) => element == products[i]).length,);
+    result.update(
+      products[i],
+      (value) => value,
+      ifAbsent: () =>
+          products.where((element) => element == products[i]).length,
+    );
   }
   return result;
 }
@@ -18,11 +22,27 @@ class ProductsCartView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final status = context.select<BottomNavBarBloc, CartStorageStatus>(
+      (bloc) => bloc.state.status,
+    );
     final productCart = context.select<BottomNavBarBloc, List<Product>>(
       (bloc) => bloc.state.shoppingCart,
     );
     final productCartMap = compact(productCart);
+    if (status == CartStorageStatus.loading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          context.read<BottomNavBarBloc>().add(ClearProductCartEvent());
+        },
+        child: const Icon(Icons.delete),
+      ),
       body: SingleChildScrollView(
         child: Column(
           children: productCartMap.entries.map(

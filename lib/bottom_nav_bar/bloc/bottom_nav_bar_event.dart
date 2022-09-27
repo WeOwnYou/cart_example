@@ -6,6 +6,11 @@ abstract class BottomNavBarEvent {
 
 class LoadDataEvent extends BottomNavBarEvent {}
 
+class CartStatusChangedEvent extends BottomNavBarEvent{
+  final CartStorageStatus status;
+  const CartStatusChangedEvent(this.status);
+}
+
 class AddProductToCartEvent extends BottomNavBarEvent{
   final Product product;
   const AddProductToCartEvent(this.product);
